@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.Console;
+using Hangfire.Dashboard.Management;
 using Hangfire.MemoryStorage;
 using HangfireLAB.Web.Filters;
+using HangfireLAB.Web.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -29,11 +31,14 @@ namespace HangfireLAB.Web
         {
             services.AddControllersWithViews();
             services.AddSession();
-            services.AddHangfire(config => {
+            services.AddHangfire(config =>
+            {
                 // 使用 memory storage
                 config.UseMemoryStorage();
                 // 使用 console
                 config.UseConsole();
+                config.UseManagementPages(c => c.AddJobs(GetModuleTypes()));
+
                 config.UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.ServerCount) //服务器数量
                     .UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.RecurringJobCount) //任务数量
                     .UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.RetriesCount) //重试次数
@@ -70,7 +75,7 @@ namespace HangfireLAB.Web
             app.UseStaticFiles();
             app.UseRouting();
             app.UseSession();
-            
+
             // 加入 hangfire 的server實體，可重複此行加入多個實體
             app.UseHangfireServer();
 
@@ -82,10 +87,10 @@ namespace HangfireLAB.Web
                     Authorization = new[] { new MyAuthFilter() }
                 }
             );
-            
+
             // add enqueue job demo
             var jobId = backgroundJobs.Enqueue(() => Console.WriteLine("Fire-and-forget!"));
-            
+
             // add cron job demo
             RecurringJob.AddOrUpdate("some-id", () => Console.WriteLine(DateTime.Now), Cron.Minutely);
 
@@ -97,6 +102,18 @@ namespace HangfireLAB.Web
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+        }
+
+        public static Type[] GetModuleTypes()
+        {
+            var moduleTypes = GetApplicationTypes();
+            return moduleTypes;
+        }
+        private static Type[] GetApplicationTypes()
+        {
+            var assemblies = new[] { typeof(MyJob).Assembly };
+            var types = assemblies.SelectMany(f => f.GetTypes()).ToArray();
+            return types;
         }
     }
 }
