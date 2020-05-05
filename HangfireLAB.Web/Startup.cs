@@ -30,10 +30,22 @@ namespace HangfireLAB.Web
             services.AddControllersWithViews();
             services.AddSession();
             services.AddHangfire(config => {
-                // 設定使用MemoryStorage
+                // 使用 memory storage
                 config.UseMemoryStorage();
-                // 支援Console(選用)
+                // 使用 console
                 config.UseConsole();
+                config.UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.ServerCount) //服务器数量
+                    .UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.RecurringJobCount) //任务数量
+                    .UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.RetriesCount) //重试次数
+                    //.UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.EnqueuedCountOrNull)//队列数量
+                    //.UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.FailedCountOrNull)//失败数量
+                    .UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.EnqueuedAndQueueCount) //队列数量
+                    .UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.ScheduledCount) //计划任务数量
+                    .UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.ProcessingCount) //执行中的任务数量
+                    .UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.SucceededCount) //成功作业数量
+                    .UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.FailedCount) //失败数量
+                    .UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.DeletedCount) //删除数量
+                    .UseDashboardMetric(Hangfire.Dashboard.DashboardMetrics.AwaitingCount); //等待任务数量
             });
 
             // DI
@@ -59,19 +71,21 @@ namespace HangfireLAB.Web
             app.UseRouting();
             app.UseSession();
             
-            // 加入Hangfire伺服器
+            // 加入 hangfire 的server實體，可重複此行加入多個實體
             app.UseHangfireServer();
 
-            // 加入Hangfire控制面板
+            // 加入 hangfire 控制面板
             app.UseHangfireDashboard(
                 pathMatch: "/hangfire",
-                options: new DashboardOptions() { // 使用自訂的認證過濾器
+                options: new DashboardOptions() { 
+                    // 進入 hangfire dashboard 的授權規則 (有沒有權限看 dashboard 就看這個邏輯怎麼設定)
                     Authorization = new[] { new MyAuthFilter() }
                 }
             );
             
             // add enqueue job demo
-            backgroundJobs.Enqueue(() => Console.WriteLine("Hello world from Hangfire!"));
+            var jobId = backgroundJobs.Enqueue(() => Console.WriteLine("Fire-and-forget!"));
+            
             // add cron job demo
             RecurringJob.AddOrUpdate("some-id", () => Console.WriteLine(DateTime.Now), Cron.Minutely);
 
