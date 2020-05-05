@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hangfire;
+using Hangfire.MemoryStorage;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -24,10 +26,11 @@ namespace HangfireLAB.Web
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+            services.AddHangfire(c => c.UseMemoryStorage());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IBackgroundJobClient backgroundJobs)
         {
             if (env.IsDevelopment())
             {
@@ -44,6 +47,12 @@ namespace HangfireLAB.Web
             app.UseStaticFiles();
 
             app.UseRouting();
+            app.UseHangfireServer();
+            app.UseHangfireDashboard();
+            // add enqueue job demo
+            backgroundJobs.Enqueue(() => Console.WriteLine("Hello world from Hangfire!"));
+            // add cron job demo
+            RecurringJob.AddOrUpdate("some-id", () => Console.WriteLine(DateTime.Now), Cron.Minutely);
 
             app.UseAuthorization();
 
