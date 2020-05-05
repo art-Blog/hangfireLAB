@@ -15,42 +15,66 @@ namespace HangfireLAB.Web.Models
     [Hangfire.Dashboard.Management.Metadata.ManagementPage("排程任務", "default")]
     public class MyJob
     {
+        protected IBackgroundJobClient JobClient
+        {
+            get => this._jobClient ?? (this._jobClient = new BackgroundJobClient());
+            set => this._jobClient = value;
+        }
+
+        private IBackgroundJobClient _jobClient;
+
+        public MyJob() : this(new BackgroundJobClient())
+        {
+        }
+
+        public MyJob(IBackgroundJobClient jobClient)
+        {
+            this.JobClient = jobClient;
+        }
+
         public static void 即時任務(PerformContext context)
         {
             context.WriteLine($"執行即時任務:{DateTime.Now:hh:mm}");
         }
-        
+
         [Hangfire.Dashboard.Management.Support.Job]
         [DisplayName("呼叫內部方法")]
-        public void Action(PerformContext context = null, IJobCancellationToken cancellationToken = null)
+        public void SomeWork01(PerformContext context = null, IJobCancellationToken cancellationToken = null)
         {
             if (cancellationToken.ShutdownToken.IsCancellationRequested)
             {
                 return;
             }
- 
+
             context.WriteLine($"測試用，Now:{DateTime.Now}");
             Thread.Sleep(30000);
         }
-        
+
+
+        public void EnqueueJob()
+        {
+            this.JobClient.Enqueue(() => this.SomeWork01(null, JobCancellationToken.Null));
+        }
+
+
         [Queue("default")]
         [Hangfire.Dashboard.Management.Support.Job]
         [DisplayName("请求连接")]
         [Description("请求外部连接,除非指定任务")]
-        [AutomaticRetry(Attempts = 3)]//自动重试
-        [DisableConcurrentExecution(90)]//禁用并行执行
+        [AutomaticRetry(Attempts = 3)] //自动重试
+        [DisableConcurrentExecution(90)] //禁用并行执行
         public string SendRequest(
-            [Hangfire.Dashboard.Management.Metadata.DisplayData("请求链接","http://localhost:8080/test.html?name=youname","请求外部连接,必须http或者https开头")]
+            [Hangfire.Dashboard.Management.Metadata.DisplayData("请求链接", "http://localhost:8080/test.html?name=youname", "请求外部连接,必须http或者https开头")]
             Uri url,
-            [Hangfire.Dashboard.Management.Metadata.DisplayData("请求方式","POST","常用的请求方式有 GET、POST、PUT、DELETE 等")]
+            [Hangfire.Dashboard.Management.Metadata.DisplayData("请求方式", "POST", "常用的请求方式有 GET、POST、PUT、DELETE 等")]
             HttpMethod method = HttpMethod.POST,
-            [Hangfire.Dashboard.Management.Metadata.DisplayData("请求内容",IsMultiLine =true)]
+            [Hangfire.Dashboard.Management.Metadata.DisplayData("请求内容", IsMultiLine = true)]
             string content = null,
-            [Hangfire.Dashboard.Management.Metadata.DisplayData("请求协议","application/x-www-form-urlencoded","常见的有 application/x-www-form-urlencoded、multipart/form-data、text/plain、application/json 等","application/x-www-form-urlencoded")]
+            [Hangfire.Dashboard.Management.Metadata.DisplayData("请求协议", "application/x-www-form-urlencoded", "常见的有 application/x-www-form-urlencoded、multipart/form-data、text/plain、application/json 等", "application/x-www-form-urlencoded")]
             string contentType = "application/x-www-form-urlencoded",
-            [Hangfire.Dashboard.Management.Metadata.DisplayData("提交内容的编码方式","utf-8","常见的有 UTF-8、Unicode、ASCII，错误的编码会导致内容无法识别","utf-8",ConvertType=typeof(EncodingsInputDataList))]
+            [Hangfire.Dashboard.Management.Metadata.DisplayData("提交内容的编码方式", "utf-8", "常见的有 UTF-8、Unicode、ASCII，错误的编码会导致内容无法识别", "utf-8", ConvertType = typeof(EncodingsInputDataList))]
             string contentEncoding = "UTF-8",
-            [Hangfire.Dashboard.Management.Metadata.DisplayData("返回结果内容的编码方式","utf-8","常见的有 UTF-8、Unicode、ASCII，错误的编码会导致内容无法识别","utf-8",ConvertType=typeof(EncodingsInputDataList))]
+            [Hangfire.Dashboard.Management.Metadata.DisplayData("返回结果内容的编码方式", "utf-8", "常见的有 UTF-8、Unicode、ASCII，错误的编码会导致内容无法识别", "utf-8", ConvertType = typeof(EncodingsInputDataList))]
             string responseEncoding = "UTF-8",
             PerformContext context = null)
         {
@@ -60,7 +84,7 @@ namespace HangfireLAB.Web.Models
 
             return r;
         }
-        
+
         /// <summary>  
         /// 指定Post地址使用Get 方式获取全部字符串  
         /// </summary>  
@@ -72,7 +96,7 @@ namespace HangfireLAB.Web.Models
             //申明一个容器result接收数据
             string result = "";
             //首先创建一个HttpWebRequest,申明传输方式POST
-            var req = (HttpWebRequest)WebRequest.Create(url);
+            var req = (HttpWebRequest) WebRequest.Create(url);
             req.Method = method.ToString();
             req.ContentType = contentType;
 
@@ -87,23 +111,41 @@ namespace HangfireLAB.Web.Models
                     reqStream.Close();
                 }
             }
+
             //申明一个容器resp接收返回数据
-            var resp = (HttpWebResponse)req.GetResponse();
+            var resp = (HttpWebResponse) req.GetResponse();
             Stream stream = resp.GetResponseStream();
             //获取响应内容  
             using (StreamReader reader = new StreamReader(stream, (responseEncoding ?? Encoding.UTF8)))
             {
                 result = reader.ReadToEnd();
             }
+
             return result;
         }
     }
-    
+
     public enum HttpMethod
     {
-        GET, POST, PUT, HEAD, TRACE, DELETE, SEARCH, CONNECT, PROPFIND, PROPPATCH, PATCH, MKCOL, COPY, MOVE, LOCK, UNLOCK, OPTIONS
+        GET,
+        POST,
+        PUT,
+        HEAD,
+        TRACE,
+        DELETE,
+        SEARCH,
+        CONNECT,
+        PROPFIND,
+        PROPPATCH,
+        PATCH,
+        MKCOL,
+        COPY,
+        MOVE,
+        LOCK,
+        UNLOCK,
+        OPTIONS
     }
-    
+
     public class EncodingsInputDataList : Hangfire.Dashboard.Management.Metadata.IInputDataList
     {
         public System.Collections.Generic.Dictionary<string, string> GetData()

@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HangfireLAB.Web", "HangfireLAB.Web\HangfireLAB.Web.csproj", "{F27854AE-E3F6-4852-B5D6-D80B7B4EDABC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HangfireLAB.Web.Test", "HangfireLAB.Web.Test\HangfireLAB.Web.Test.csproj", "{5EE202D7-4EB2-4333-840D-1B0B2D375B10}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{F27854AE-E3F6-4852-B5D6-D80B7B4EDABC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F27854AE-E3F6-4852-B5D6-D80B7B4EDABC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F27854AE-E3F6-4852-B5D6-D80B7B4EDABC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EE202D7-4EB2-4333-840D-1B0B2D375B10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EE202D7-4EB2-4333-840D-1B0B2D375B10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EE202D7-4EB2-4333-840D-1B0B2D375B10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EE202D7-4EB2-4333-840D-1B0B2D375B10}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
