@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using HangfireLAB.Web.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace HangfireLAB.Web.Controllers
 {
@@ -26,6 +27,18 @@ namespace HangfireLAB.Web.Controllers
         public IActionResult Privacy()
         {
             return View();
+        }
+
+        public IActionResult Login()
+        {
+            HttpContext.Session.SetString("Id", "art");
+            return Redirect("/hangfire");
+        }
+
+        public IActionResult LogOut()
+        {
+            HttpContext.Session.Clear();
+            return Redirect("/");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
