@@ -35,6 +35,9 @@ namespace HangfireLAB.Web
                 // 支援Console(選用)
                 config.UseConsole();
             });
+
+            // DI
+            services.AddSingleton(s => new RecurringJobManager());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
